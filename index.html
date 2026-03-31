@@ -3,26 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Utility Costs Dashboard</title>
+    <title>KISC Utility Costs Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f4f4f4; }
-        h1 { text-align: center; color: #333; }
-        .subtitle { text-align: center; color: #666; margin-bottom: 30px; }
-        .cards { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-bottom: 40px; }
-        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; min-width: 180px; }
-        .card h2 { margin: 10px 0 5px; font-size: 2em; color: #1e40af; }
-        .card p { margin: 0; color: #666; }
-        .charts { display: flex; flex-wrap: wrap; gap: 30px; justify-content: center; }
-        .chart-container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 100%; max-width: 650px; }
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: #f8fdf8; /* Very light green tint */
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            max-height: 80px;
+            margin-bottom: 10px;
+        }
+        h1 { 
+            color: #D4AF37; /* Gold */
+            margin: 10px 0 5px;
+        }
+        .subtitle { 
+            color: #228B22; /* Forest green */
+            font-size: 1.1em;
+            margin-bottom: 30px;
+        }
+        .cards { 
+            display: flex; 
+            justify-content: center; 
+            gap: 25px; 
+            flex-wrap: wrap; 
+            margin-bottom: 40px; 
+        }
+        .card { 
+            background: white; 
+            padding: 25px 20px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08); 
+            text-align: center; 
+            min-width: 190px;
+            border-top: 5px solid #90EE90; /* Light green */
+        }
+        .card h2 { 
+            margin: 8px 0 5px; 
+            font-size: 2.2em; 
+            color: #D4AF37; /* Gold */
+        }
+        .card p { 
+            margin: 0; 
+            color: #555; 
+            font-weight: 500;
+        }
+        .note { 
+            text-align: center; 
+            color: #228B22; 
+            font-size: 0.95em; 
+            margin: 20px 0;
+            font-style: italic;
+        }
+        .charts { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 30px; 
+            justify-content: center; 
+        }
+        .chart-container { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08); 
+            width: 100%; 
+            max-width: 680px;
+        }
+        .chart-container h3 {
+            color: #228B22;
+            text-align: center;
+            margin-bottom: 15px;
+        }
         canvas { max-height: 380px; }
-        .note { text-align: center; color: #d97706; font-size: 0.95em; margin: 20px 0; }
     </style>
 </head>
 <body>
-    <h1>✨ My Utility Costs Dashboard</h1>
-    <p class="subtitle">Bulky Gas • Gas Cylinder • Electricity • Borehole</p>
+    <div class="header">
+        <!-- KISC Logo -->
+        <img src="https://kisc.sc.ke/wp-content/uploads/2023/09/KISC-Logo.png" 
+             alt="KISC Logo" 
+             class="logo"
+             onerror="this.src='https://via.placeholder.com/250x80/90EE90/D4AF37?text=KISC+LOGO';">
+        
+        <h1>KISC Utility Costs Dashboard</h1>
+        <p class="subtitle">Bulky Gas • Gas Cylinder • Electricity • Borehole | 2026 Monitoring</p>
+    </div>
 
     <div class="cards">
         <div class="card">
@@ -40,7 +114,7 @@
     </div>
 
     <div class="note">
-        Note: Only Bulky Gas data is available in your CSV right now. Other utilities will appear when you add data.
+        Note: Only Bulky Gas data is currently available. Other utilities will appear once added to the Master CSV.
     </div>
 
     <div class="charts">
@@ -62,7 +136,6 @@
             complete: function(results) {
                 let data = results.data;
 
-                // Filter rows that have Bulky Gas data (Timestamp and Units used)
                 let bulkyData = data.filter(row => 
                     row.Timestamp && 
                     row.Timestamp.trim() !== "" && 
@@ -71,12 +144,11 @@
                 );
 
                 if (bulkyData.length === 0) {
-                    alert("No Bulky Gas data found in data.csv. Check the file and upload again.");
+                    alert("No Bulky Gas data found. Please check your data.csv file.");
                     return;
                 }
 
-                // Calculate Cost (change 100 to your actual rate per unit)
-                const costPerUnit = 100;   // ←←← CHANGE THIS IF YOUR RATE IS DIFFERENT
+                const costPerUnit = 100;   // ← Change this to your actual cost per unit for Bulky Gas
 
                 bulkyData.forEach(row => {
                     row.Date = row.Timestamp;
@@ -88,13 +160,14 @@
                 // Update KPI Cards
                 const totalCost = bulkyData.reduce((sum, row) => sum + row.Cost, 0);
                 const totalEntries = bulkyData.length;
-                const avgUnits = (bulkyData.reduce((sum, row) => sum + row.Units, 0) / totalEntries).toFixed(1);
+                const avgUnits = totalEntries > 0 ? 
+                    (bulkyData.reduce((sum, row) => sum + row.Units, 0) / totalEntries).toFixed(1) : 0;
 
                 document.getElementById("total-cost").textContent = "KES " + totalCost.toLocaleString();
                 document.getElementById("total-entries").textContent = totalEntries;
                 document.getElementById("avg-daily").textContent = avgUnits;
 
-                // Bar Chart - Daily Units
+                // Bar Chart - Daily Units (Light Green & Gold)
                 const dates = bulkyData.map(row => row.Date);
                 const units = bulkyData.map(row => row.Units);
 
@@ -105,16 +178,18 @@
                         datasets: [{
                             label: 'Units Used',
                             data: units,
-                            backgroundColor: '#3b82f6'
+                            backgroundColor: '#90EE90',   // Light Green
+                            borderColor: '#228B22',
+                            borderWidth: 1
                         }]
                     },
                     options: {
                         responsive: true,
-                        plugins: { legend: { display: true } }
+                        plugins: { legend: { display: true, position: 'top' } }
                     }
                 });
 
-                // Line Chart - Cost Trend
+                // Line Chart - Cost Trend (Gold)
                 new Chart(document.getElementById('lineChart'), {
                     type: 'line',
                     data: {
@@ -122,18 +197,22 @@
                         datasets: [{
                             label: 'Daily Cost (KES)',
                             data: bulkyData.map(row => row.Cost),
-                            borderColor: '#10b981',
-                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderColor: '#D4AF37',      // Gold
+                            backgroundColor: 'rgba(212, 175, 55, 0.15)',
                             tension: 0.3,
-                            fill: true
+                            fill: true,
+                            borderWidth: 3
                         }]
                     },
-                    options: { responsive: true }
+                    options: { 
+                        responsive: true,
+                        plugins: { legend: { display: true } }
+                    }
                 });
             },
             error: function(err) {
                 console.error(err);
-                alert("Failed to load data.csv. Make sure the file is in the same folder as index.html and named exactly 'data.csv'");
+                alert("Could not load data.csv. Ensure the file is named exactly 'data.csv' and uploaded to your GitHub repo.");
             }
         });
     </script>
