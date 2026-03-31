@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Utility Costs Dashboard - Nairobi</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f8f9fa; }
+    h1 { text-align: center; color: #2c3e50; }
+    .cards { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; margin: 20px 0; }
+    .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); text-align: center; min-width: 180px; }
+    .card h2 { margin: 5px 0; font-size: 1.8em; }
+    .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 900px) { .charts { grid-template-columns: 1fr; } }
+    canvas { background: white; border-radius: 10px; padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+  <h1>🛠 My Utility Costs Dashboard</h1>
+  <p style="text-align:center;">Bulky Gas • Gas Cylinder • Electricity • Borehole</p>
+
+  <div class="cards" id="summary-cards">
+    <!-- Cards will be filled by JavaScript -->
+  </div>
+
+  <div class="charts">
+    <div>
+      <h2>Total Cost by Utility Type</h2>
+      <canvas id="barChart"></canvas>
+    </div>
+    <div>
+      <h2>Cost Trend Over Time</h2>
+      <canvas id="lineChart"></canvas>
+    </div>
+  </div>
+
+  <script>
+    // Load CSV file (upload your Master_Data.csv as "data.csv" in the same folder)
+    async function loadData() {
+      const response = await fetch('data.csv');
+      const text = await response.text();
+      const rows = text.split('\n').map(row => row.split(','));
+      const headers = rows[0];
+      const data = rows.slice(1).filter(row => row.length > 1);
+
+      // Find column indices
+      const typeIdx = headers.findIndex(h => h.toLowerCase().includes('utility') || h.toLowerCase().includes('type'));
+      const dateIdx = headers.findIndex(h => h.toLowerCase().includes('date'));
+      const costIdx = headers.findIndex(h => h.toLowerCase().includes('cost') || h.toLowerCase().includes('amount'));
+
+      // Process data
+      let totalCost = 0;
+      const utilityCosts = {};
+      const monthlyCosts = {};
+
+      data.forEach(row => {
+        const utility = row[typeIdx] ? row[typeIdx].trim() : 'Unknown';
+        const costStr = row[costIdx] ? row[costIdx].trim() : '0';
+        const cost = parseFloat(costStr.replace(/[^0-9.-]+/g,"")) || 0;
+        const date = row[dateIdx] ? row[dateIdx].trim() : '';
+
+        totalCost += cost;
+        utilityCosts[utility] = (utilityCosts[utility] || 0) + cost;
+
+        // Simple month grouping (YYYY-MM)
+        if (date) {
+          const month = date.substring(0,7); // e.g., 2025-03
+          monthlyCosts[month] = (monthlyCosts[month] || 0) + cost;
+        }
+      });
+
+      // Summary Cards
+      const cardsHTML = `
+        <div class="card"><h2>KES ${totalCost.toLocaleString()}</h2><p>Total Cost</p></div>
+        <div class="card"><h2>${Object.keys(utilityCosts).length}</h2><p>Utilities Tracked</p></div>
+        <div class="card"><h2>${data.length}</h2><p>Total Entries</p></div>
+      `;
+      document.getElementById('summary-cards').innerHTML = cardsHTML;
+
+      // Bar Chart - Cost by Utility
+      new Chart(document.getElementById('barChart'), {
+        type: 'bar',
+        data: {
+          labels: Object.keys(utilityCosts),
+          datasets: [{
+            label: 'Total Cost (KES)',
+            data: Object.values(utilityCosts),
+            backgroundColor: ['#3498db', '#e74c3c', '#2ecc71', '#f1c40f']
+          }]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+      });
+
+      // Line Chart - Trend
+      const sortedMonths = Object.keys(monthlyCosts).sort();
+      new Chart(document.getElementById('lineChart'), {
+        type: 'line',
+        data: {
+          labels: sortedMonths,
+          datasets: [{
+            label: 'Monthly Cost (KES)',
+            data: sortedMonths.map(m => monthlyCosts[m]),
+            borderColor: '#2980b9',
+            tension: 0.3,
+            fill: false
+          }]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+      });
+    }
+
+    // Load the data when page opens
+    loadData();
+  </script>
+</body>
+</html>
